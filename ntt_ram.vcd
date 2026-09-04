@@ -1,0 +1,145 @@
+$date
+	Fri Sep  4 09:03:44 2026
+$end
+$version
+	Icarus Verilog
+$end
+$timescale
+	1ps
+$end
+$scope module tb_ram $end
+$var wire 23 ! rd_data [22:0] $end
+$var wire 23 " dout_b [22:0] $end
+$var wire 23 # dout_a [22:0] $end
+$var reg 8 $ addr_a [7:0] $end
+$var reg 8 % addr_b [7:0] $end
+$var reg 1 & clk $end
+$var reg 23 ' din_a [22:0] $end
+$var reg 23 ( din_b [22:0] $end
+$var reg 8 ) rd_addr [7:0] $end
+$var reg 1 * we_a $end
+$var reg 1 + we_b $end
+$scope module dut $end
+$var wire 8 , addr_a [7:0] $end
+$var wire 8 - addr_b [7:0] $end
+$var wire 1 & clk $end
+$var wire 23 . din_a [22:0] $end
+$var wire 23 / din_b [22:0] $end
+$var wire 8 0 rd_addr [7:0] $end
+$var wire 23 1 rd_data [22:0] $end
+$var wire 1 * we_a $end
+$var wire 1 + we_b $end
+$var reg 23 2 dout_a [22:0] $end
+$var reg 23 3 dout_b [22:0] $end
+$upscope $end
+$upscope $end
+$enddefinitions $end
+$comment Show the parameter values. $end
+$dumpall
+$end
+#0
+$dumpvars
+bx 3
+bx 2
+bx 1
+b0 0
+b0 /
+b0 .
+b0 -
+b0 ,
+0+
+0*
+b0 )
+b0 (
+b0 '
+0&
+b0 %
+b0 $
+bx #
+bx "
+bx !
+$end
+#5000
+1&
+#10000
+0&
+1*
+b100100011010001010110 '
+b100100011010001010110 .
+b1010 $
+b1010 ,
+#15000
+1&
+#20000
+0&
+b100100011010001010110 !
+b100100011010001010110 1
+b1010 )
+b1010 0
+0*
+#25000
+b100100011010001010110 #
+b100100011010001010110 2
+1&
+#30000
+0&
+1+
+b11001010100001100100001 (
+b11001010100001100100001 /
+b10100 %
+b10100 -
+#35000
+1&
+#40000
+0&
+b11001010100001100100001 !
+b11001010100001100100001 1
+b10100 )
+b10100 0
+0+
+#45000
+b11001010100001100100001 "
+b11001010100001100100001 3
+1&
+#50000
+0&
+1+
+b1000100010001000100010 (
+b1000100010001000100010 /
+b101000 %
+b101000 -
+1*
+b100010001000100010001 '
+b100010001000100010001 .
+b11110 $
+b11110 ,
+#55000
+bx "
+bx 3
+bx #
+bx 2
+1&
+#60000
+0&
+b100010001000100010001 !
+b100010001000100010001 1
+b11110 )
+b11110 0
+0+
+0*
+#65000
+b100010001000100010001 #
+b100010001000100010001 2
+b1000100010001000100010 "
+b1000100010001000100010 3
+1&
+#70000
+0&
+b1000100010001000100010 !
+b1000100010001000100010 1
+b101000 )
+b101000 0
+#75000
+1&
+#80000
+0&
