@@ -1,4 +1,4 @@
-module bf_unit (
+module bff_unit (
     input  wire        clk,
     input  wire        rst_n,
     input  wire [22:0] a_in,

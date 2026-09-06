@@ -1,6 +1,6 @@
 `timescale 1ns/1ps
 
-module ntt_engine_fwd (
+module ntt (
     input  wire        clk,
     input  wire        rst_n,
     input  wire        start,
@@ -19,7 +19,7 @@ module ntt_engine_fwd (
     reg         we_a,   we_b;
     wire [22:0] dout_a, dout_b;
 
-    ntt_ram u_ram (
+    r u_ram (
         .clk(clk),
         .addr_a(addr_a), .din_a(din_a), .we_a(we_a), .dout_a(dout_a),
         .addr_b(addr_b), .din_b(din_b), .we_b(we_b), .dout_b(dout_b),
@@ -30,7 +30,7 @@ module ntt_engine_fwd (
     wire [22:0] twiddle;
     wire [7:0]  ag_kidx;
 
-    twiddle_rom u_rom (
+    tw_rom u_rom (
         .clk(clk), .algo_sel(algo_sel), .inv(1'b0),
         .kidx(ag_kidx), .twiddle(twiddle)
     );
@@ -40,7 +40,7 @@ module ntt_engine_fwd (
     wire       ag_valid, ag_done;
     reg        ag_start, ag_adv;
 
-    ntt_addr_gen u_addrgen (
+    addr_gen u_addrgen (
         .clk(clk), .rst_n(rst_n),
         .start(ag_start), .algo_sel(algo_sel), .adv(ag_adv),
         .length(ag_length), .kidx(ag_kidx), .j(ag_j),
@@ -53,7 +53,7 @@ module ntt_engine_fwd (
     wire [22:0] bf_ao, bf_bo;
     wire        bf_vo;
 
-    bf_unit u_bf (
+    bff_unit u_bf (
         .clk(clk), .rst_n(rst_n),
         .a_in(bf_a), .b_in(bf_b), .w_in(bf_w),
         .algo_sel(algo_sel), .mode(1'b0), .valid_in(bf_vin),
