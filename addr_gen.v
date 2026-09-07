@@ -14,11 +14,11 @@ module addr_gen (
 );
     reg [7:0] start_g;
     reg       algo_r;
-
     wire [7:0] stop = algo_r ? 8'd1 : 8'd2;
-
     assign ja = j;
     assign jb = j + length;
+
+    wire [8:0] len2 = {1'b0, length} + {1'b0, length};  // exact 2*length, no wrap
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -43,9 +43,9 @@ module addr_gen (
                     j <= j + 1;
                 end else begin
                     kidx <= kidx + 1;
-                    if (start_g + (length << 1) < 256) begin
-                        start_g <= start_g + (length << 1);
-                        j       <= start_g + (length << 1);
+                    if ({1'b0, start_g} + len2 < 9'd256) begin
+                        start_g <= start_g + len2[7:0];
+                        j       <= start_g + len2[7:0];
                     end else if ((length >> 1) >= stop) begin
                         length  <= length >> 1;
                         start_g <= 8'd0;

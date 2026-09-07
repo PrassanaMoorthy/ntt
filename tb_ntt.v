@@ -41,9 +41,18 @@ module tb_ntt;
         wait(done);
 
         // 4. Verify RAM Output
+        //
+        // NOTE: rd_data is produced by a nonblocking assignment inside
+        // ntt_ram's own posedge-clk block. Checking it immediately after
+        // "@(posedge clk)" (same Active-region timestep) reads the value
+        // from BEFORE this edge's NBA update lands, one cycle stale.
+        // A "#1" settle delay lets the NBA region complete first, so the
+        // check actually observes the freshly registered rd_data for the
+        // rd_addr we just set.
         for (i = 0; i < 256; i = i + 1) begin
             rd_addr <= i;
             @(posedge clk); // Allow pipeline read latency
+            #1;             // let rd_data's NBA update settle before sampling
             if (rd_data !== test_exp[i]) begin
                 $display("ERROR at addr %0d: Expected %0h, Got %0h", i, test_exp[i], rd_data);
                 errors = errors + 1;
