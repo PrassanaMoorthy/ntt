@@ -51,19 +51,20 @@ The accelerator operates directly on coefficients stored in RAM. For each butter
 
 ```text
 .
-├── rtl/
+├── 256point/
 │   ├── top_module.v
 │   ├── fsm.v
 │   ├── addr_gen.v
 │   ├── bf_unit.v
 │   ├── tw_rom.v
 │   └── ram.v
-│
-├── tb/
-│   └── ...
-│
-├── docs/
-│   └── design.md
+│── 8point/
+│   ├── top_module.v
+│   ├── fsm.v
+│   ├── addr_gen.v
+│   ├── bf_unit.v
+│   ├── tw_rom.v
+│   └── ram.v
 │
 └── README.md
 ```
