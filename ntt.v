@@ -19,19 +19,31 @@ module ntt (
     reg         we_a,   we_b;
     wire [22:0] dout_a, dout_b;
 
-    r u_ram (
+    ntt_ram u_ram (
         .clk(clk),
         .addr_a(addr_a), .din_a(din_a), .we_a(we_a), .dout_a(dout_a),
         .addr_b(addr_b), .din_b(din_b), .we_b(we_b), .dout_b(dout_b),
         .rd_addr(rd_addr), .rd_data(rd_data)
     );
 
+    // ---- algo_sel latch ----
+    // Latched once at start-of-run so a change on the live algo_sel input
+    // mid-run (e.g. before `done`) can't desync the twiddle table / modulus
+    // from the stage structure that addr_gen already committed to.
+    reg algo_lat;
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n)
+            algo_lat <= 1'b0;
+        else if (start)
+            algo_lat <= algo_sel;
+    end
+
     // ---- twiddle ROM ----
     wire [22:0] twiddle;
     wire [7:0]  ag_kidx;
 
     tw_rom u_rom (
-        .clk(clk), .algo_sel(algo_sel), .inv(1'b0),
+        .clk(clk), .algo_sel(algo_lat), .inv(1'b0),
         .kidx(ag_kidx), .twiddle(twiddle)
     );
 
@@ -56,7 +68,7 @@ module ntt (
     bff_unit u_bf (
         .clk(clk), .rst_n(rst_n),
         .a_in(bf_a), .b_in(bf_b), .w_in(bf_w),
-        .algo_sel(algo_sel), .mode(1'b0), .valid_in(bf_vin),
+        .algo_sel(algo_lat), .mode(1'b0), .valid_in(bf_vin),
         .a_out(bf_ao), .b_out(bf_bo), .valid_out(bf_vo)
     );
 
