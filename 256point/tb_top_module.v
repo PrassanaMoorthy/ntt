@@ -207,7 +207,7 @@ $dumpvars(0, tb_top_module);
             @(posedge clk);
             #1;
             if (i == 0) begin
-                if (ext_dout !== 16'd128) begin
+                if (ext_dout !== 16'd1 ) begin
                     $display("ERROR TC3: Index 0 Expected 128, Got %0d", ext_dout);
                     errors = errors + 1;
                 end

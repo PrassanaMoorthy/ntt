@@ -24,6 +24,8 @@ module top_module (
     wire       fsm_ram_we;
     wire [2:0] stage;
     wire [6:0] bf_idx;
+    wire       scale_active;   // NEW
+    wire [7:0] scale_addr;     // NEW
 
     // --- Memory & Generator Interconnects ---
     wire [7:0]  int_addr_a;
@@ -45,10 +47,13 @@ module top_module (
 
     // --- Host / NTT Memory Multiplexing Logic ---
     assign ram_we_a   = busy ? fsm_ram_we : ext_we;
-    assign ram_we_b   = busy ? fsm_ram_we : 1'b0;
+    // NEW: port B must stay disabled during the single-port scale pass.
+    assign ram_we_b   = (busy && !scale_active) ? fsm_ram_we : 1'b0;
 
-    assign ram_addr_a = busy ? int_addr_a : ext_addr;
-    assign ram_addr_b = busy ? int_addr_b : 8'd0;
+    // NEW: during the scale pass, addr_a is driven directly by the fsm's
+    // scale_addr counter instead of addr_gen's butterfly-pair addressing.
+    assign ram_addr_a = busy ? (scale_active ? scale_addr : int_addr_a) : ext_addr;
+    assign ram_addr_b = (busy && !scale_active) ? int_addr_b : 8'd0;
 
     assign ram_din_a  = busy ? bf_out_a : ext_din;
     assign ram_din_b  = busy ? bf_out_b : 16'd0;
@@ -59,17 +64,21 @@ module top_module (
 
     // 1. Controller FSM
     fsm u_fsm (
-        .clk    (clk),
-        .rst    (rst),
-        .start  (start),
-        .busy   (busy),
-        .done   (done),
-        .stage  (stage),
-        .bf_idx (bf_idx),
-        .ram_we (fsm_ram_we)
+        .clk          (clk),
+        .rst          (rst),
+        .start        (start),
+        .mode         (mode_reg),      // NEW: needed to gate the scale pass
+        .busy         (busy),
+        .done         (done),
+        .stage        (stage),
+        .bf_idx       (bf_idx),
+        .ram_we       (fsm_ram_we),
+        .scale_active (scale_active),  // NEW
+        .scale_addr   (scale_addr)     // NEW
     );
 
     // 2. Address Generator
+    // (unchanged — its outputs are simply ignored while scale_active is high)
     addr_gen u_addr_gen (
         .mode    (mode_reg),
         .stage   (stage),
@@ -80,6 +89,7 @@ module top_module (
     );
 
     // 3. Twiddle Factor ROM
+    // (unchanged — output is unused by bf_unit while scale_active is high)
     tw_rom u_tw_rom (
         .clk     (clk),
         .addr    (tw_addr),
@@ -88,17 +98,19 @@ module top_module (
 
     // 4. Butterfly Arithmetic Unit
     bf_unit u_bf_unit (
-        .clk     (clk),
-        .rst     (rst),
-        .mode    (mode_reg),
-        .in_a    (ram_dout_a),
-        .in_b    (ram_dout_b),
-        .tw_data (tw_data),
-        .out_a   (bf_out_a),
-        .out_b   (bf_out_b)
+        .clk      (clk),
+        .rst      (rst),
+        .mode     (mode_reg),
+        .scale_en (scale_active),   // NEW
+        .in_a     (ram_dout_a),
+        .in_b     (ram_dout_b),
+        .tw_data  (tw_data),
+        .out_a    (bf_out_a),
+        .out_b    (bf_out_b)
     );
 
     // 5. Dual-Port Coefficient RAM
+    // (unchanged)
     ram u_ram (
         .clk    (clk),
         .we_a   (ram_we_a),
