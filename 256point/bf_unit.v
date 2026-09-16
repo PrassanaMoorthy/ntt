@@ -13,18 +13,29 @@ module bf_unit (
     output reg  [15:0] out_b
 );
 
-    // =========================================================
-    // Kyber / ML-KEM Parameters
-    // =========================================================
+    // ==========================================================
+    // Kyber parameters
+    // ==========================================================
 
     localparam [15:0] Q          = 16'd3329;
-    localparam [15:0] Q_INV      = 16'd62209;
-    localparam [15:0] N_INV_MONT = 16'd512;
 
+    // Q_INV must satisfy: Q * Q_INV = -1 (mod 2^16)
+    // i.e. Q_INV = 3327, NOT the "positive inverse" 62209
+    // (62209 satisfies Q*62209 = +1 mod 2^16, which only works
+    //  if you SUBTRACT m*Q in the reduction step, not add it).
+    //
+    // Verified: 3329 * 3327 mod 65536 = 65535 = -1 mod 2^16.
+    localparam [15:0] Q_INV      = 16'd3327;
 
-    // =========================================================
-    // Intermediate Signals
-    // =========================================================
+    // Montgomery scaling constant for the final inverse-NTT pass.
+    // Standard Kyber reference value: f = mont^2 / 128 mod Q = 1441
+    // (mont = 2^16 mod Q = 2285). This assumes the classic Kyber
+    // invNTT structure where the last butterfly layer folds in the
+    // n^-1 scaling combined with one extra factor of Montgomery's
+    // R. If your NTT does a plain, separate n^-1 multiply over a
+    // full n=256-point transform (no combined-layer trick), re-derive
+    // this constant for your exact scaling scheme before using it.
+    localparam [15:0] N_INV_MONT = 16'd1441;
 
     // Input to Montgomery multiplication
     reg [31:0] mult_in;
@@ -53,15 +64,8 @@ module bf_unit (
     reg [15:0] next_out_b;
 
 
-    // =========================================================
-    // Combinational Butterfly Logic
-    // =========================================================
 
     always @(*) begin
-
-        // -----------------------------------------------------
-        // Default values
-        // -----------------------------------------------------
 
         mult_in      = 32'd0;
 
@@ -128,11 +132,14 @@ module bf_unit (
 
 
         // =====================================================
-        // 2. MONTGOMERY REDUCTION
+        // 2. MONTGOMERY REDUCTION  (CIOS / REDC, addition form)
         // =====================================================
 
         // -----------------------------------------------------
-        // m = (mult_in mod 2^16) * Q_INV
+        // m = (mult_in mod 2^16) * Q_INV      (mod 2^16)
+        //
+        // Requires Q * Q_INV = -1 (mod 2^16) for the addition
+        // below to always produce a multiple of 2^16.
         // -----------------------------------------------------
 
         mont_m_mult = mult_in[15:0] * Q_INV;
@@ -142,6 +149,9 @@ module bf_unit (
 
         // -----------------------------------------------------
         // t = (mult_in + m * Q) / 2^16
+        //
+        // Because m was chosen so that mult_in + m*Q ≡ 0 (mod 2^16),
+        // this right shift is an exact division, not a truncation.
         // -----------------------------------------------------
 
         mont_q_mult = mont_m * Q;
@@ -150,16 +160,16 @@ module bf_unit (
 
 
         // -----------------------------------------------------
-        // If t >= Q:
+        // Conditional subtract: result of REDC lies in [0, 2Q).
         //
-        //     t = t - Q
+        // If t >= Q:  t = t - Q
+        // Otherwise:  keep t
         //
-        // Otherwise:
-        //
-        //     keep t
+        // Explicit [15:0] slice on the 32-bit mont_t used here
+        // instead of relying on implicit truncation on assignment.
         // -----------------------------------------------------
 
-        mont_t_sub = mont_t - Q;
+        mont_t_sub = {1'b0, mont_t[15:0]} - Q;
 
         if (mont_t_sub[16])
             mont_res = mont_t[15:0];
